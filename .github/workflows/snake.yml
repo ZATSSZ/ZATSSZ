@@ -1,37 +1,28 @@
 name: Generate Snake
 
 on:
-  schedule:
-    - cron: '0 0 * * *'   # Runs daily at midnight UTC
-  workflow_dispatch:
-
-permissions:
-  contents: write
+  schedule: # every 12 hours
+    - cron: "0 */12 * * *"
+  workflow_dispatch: # allow manual trigger
 
 jobs:
   generate:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: true
-          fetch-depth: 0
+      - uses: actions/checkout@v3
 
-      - name: Generate snake animation
-        uses: Platane/snk@master
+      - uses: Platane/snk@v3
         with:
-          github_user_name: ${{ github.repository_owner }}
-          outputs: dist/snake.svg
+          github_user_name: ZATSSZ
+          outputs: |
+            dist/github-contribution-grid-snake.svg
+            dist/github-contribution-grid-snake.gif
 
-      - name: Commit & push snake to repo root
+      - name: Push to output branch
+        uses: crazy-max/ghaction-github-pages@v3.1.0
+        with:
+          target_branch: output
+          build_dir: dist
         env:
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          mv dist/snake.svg snake.svg
-          git add snake.svg
-          git commit -m "update snake.svg" || echo "No changes"
-          git push "https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${DEFAULT_BRANCH}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
